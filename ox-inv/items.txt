@@ -1,0 +1,14 @@
+
+Place these in your ox_inventory/data/items.lua
+
+['sell_token'] = {
+        label = 'Stolen Phone',
+        weight = 1,
+        stack = true,
+        close = true,
+        image = "phone.png",
+        description = 'This isnt your phone',
+    },
+
+
+
