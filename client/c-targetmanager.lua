@@ -2,7 +2,7 @@
 -- 𝕭𝖑𝖆𝖈𝖐 𝕾𝖍𝖆𝖉𝖊𝖘 Sell-Manager
 -- This module allows predefined locations to be targeted and interacted with for reward.
 local Config = {
-    InteractionPoints = {
+    InteractionPoints = { --Test Locations
         {
             Interaction = {
                 Position = vector3(1559.15, 6651.86, 1.61), --Location
