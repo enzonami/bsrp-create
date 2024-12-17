@@ -12,7 +12,7 @@ local Config = {
     BLIP_SIZE = 1.0, -- Blip scale/size (default is 1.0)
     POLYZONE_RADIUS = 2.0, -- Interaction radius
     PREDEFINED_BLIPS = {
-        -- Cache Hunting
+        -- Example Locations
         {coords = vector3(1559.15, 6651.86, 1.61), name = "Point A", blipId = 353, blipColor = 3, blipSize = 0.8},
         {coords = vector3(1795.24, 6583.31, 53.48), name = "Point B", blipId = 353, blipColor = 3, blipSize = 0.8},
         {coords = vector3(2157.97, 6371.01, 184.29), name = "Point C", blipId = 353, blipColor = 3, blipSize = 0.8},
@@ -59,8 +59,8 @@ function spawnNPC()
     if Config.BLIP_ENABLED then
         local blip = AddBlipForEntity(npc)
         SetBlipSprite(blip, Config.BLIP_ID)
-        SetBlipColour(blip, Config.BLIP_COLOR) -- Apply configured color
-        SetBlipScale(blip, Config.BLIP_SIZE) -- Apply configured size
+        SetBlipColour(blip, Config.BLIP_COLOR)
+        SetBlipScale(blip, Config.BLIP_SIZE)
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentString(Config.BLIP_NAME)
         EndTextCommandSetBlipName(blip)
@@ -87,9 +87,9 @@ function toggleMarkers()
         -- Activate markers
         for _, blipData in ipairs(Config.PREDEFINED_BLIPS) do
             local blip = AddBlipForCoord(blipData.coords.x, blipData.coords.y, blipData.coords.z)
-            SetBlipSprite(blip, blipData.blipId or 1) -- Default to 1 if not set
-            SetBlipColour(blip, blipData.blipColor or 1) -- Default to 1 if not set
-            SetBlipScale(blip, blipData.blipSize or 1.0) -- Default to 1.0 if not set
+            SetBlipSprite(blip, blipData.blipId or 1)
+            SetBlipColour(blip, blipData.blipColor or 1)
+            SetBlipScale(blip, blipData.blipSize or 1.0)
             BeginTextCommandSetBlipName("STRING")
             AddTextComponentString(blipData.name)
             EndTextCommandSetBlipName(blip)
