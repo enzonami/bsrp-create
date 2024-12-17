@@ -6,7 +6,7 @@ local PropManager = {}
 local Config = {
     Props = { -- List of props to spawn
 
-    --Cache Hunting
+    --Example Locations
         {
             Model = "xm_prop_x17_chest_closed", --https://gta-objects.xyz/objects
             Position = vector3(1559.15, 6651.86, 1.61), --Location
