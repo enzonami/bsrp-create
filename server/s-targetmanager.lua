@@ -41,11 +41,11 @@ end
 
 -- Get player XP and level from database
 local function getPlayerXP(identifier)
-    local result = exports.oxmysql:query_async('SELECT xp, level FROM player_experience WHERE identifier = ?', { identifier })
+    local result = exports.oxmysql:query_async('SELECT xp, level FROM bsrp_exp WHERE identifier = ?', { identifier })
     if result[1] then
         return result[1].xp, result[1].level
     else
-        exports.oxmysql:execute_async('INSERT INTO player_experience (identifier) VALUES (?)', { identifier })
+        exports.oxmysql:execute_async('INSERT INTO bsrp_exp (identifier) VALUES (?)', { identifier })
         return 0, 1
     end
 end
@@ -55,24 +55,21 @@ local function updatePlayerXP(identifier, xpGain)
     local currentXP, currentLevel = getPlayerXP(identifier)
     local newXP = currentXP + xpGain
     local newLevel = calculateLevel(newXP)
-    exports.oxmysql:execute_async('UPDATE player_experience SET xp = ?, level = ? WHERE identifier = ?', { newXP, newLevel, identifier })
+    exports.oxmysql:execute_async('UPDATE bsrp_exp SET xp = ?, level = ? WHERE identifier = ?', { newXP, newLevel, identifier })
     return newXP, newLevel
 end
 
 -- Random reward with level modifier
 local function getRandomReward(levelModifier)
     local roll = math.random(1, 100) + levelModifier
-    print(("[DEBUG] Reward Roll: %d (Modifier: %d)"):format(roll, levelModifier))
 
     local cumulativeProbability = 0
     for _, reward in ipairs(Config.Rewards) do
         cumulativeProbability = cumulativeProbability + reward.Probability
         if roll <= cumulativeProbability then
-            print(("[DEBUG] Reward Found: %s"):format(reward.Item))
             return reward.Item
         end
     end
-    print("[DEBUG] No Reward Found")
     return nil
 end
 
@@ -98,16 +95,23 @@ RegisterNetEvent('target-manager:attemptReward', function(nodeName)
 
     local currentXP, currentLevel = getPlayerXP(identifier)
     local rewardModifier = currentLevel * 2
-    local rewardItem = getRandomReward(rewardModifier)
 
-    if rewardItem then
-        local success = Player.Functions.AddItem(rewardItem, 1)
-        print(("[DEBUG] Adding Item: %s - Success: %s"):format(rewardItem, tostring(success)))
-        if success then
-            TriggerClientEvent('ox_lib:notify', src, { type = 'success', description = ('Found: %s'):format(rewardItem) })
-        else
-            TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Inventory full.' })
+    local rewardsGranted = {}
+    for i = 1, currentLevel do -- Grant one reward per level
+        local rewardItem = getRandomReward(rewardModifier)
+        if rewardItem then
+            local success = Player.Functions.AddItem(rewardItem, 1)
+            if success then
+                table.insert(rewardsGranted, rewardItem)
+            end
         end
+    end
+
+    if #rewardsGranted > 0 then
+        TriggerClientEvent('ox_lib:notify', src, {
+            type = 'success',
+            description = ('You found: %s'):format(table.concat(rewardsGranted, ', '))
+        })
     else
         TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = 'Found nothing.' })
     end
