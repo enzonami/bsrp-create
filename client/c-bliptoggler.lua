@@ -1,95 +1,38 @@
 -- 𝕭𝖑𝖆𝖈𝖐 𝕾𝖍𝖆𝖉𝖊𝖘 Blip-Toggler
 -- This module spawns an NPC that toggles several predefined blips / map markers.
+local npcEntity = nil
+local markers = {}
+local markersActive = false
+local isTogglingMarkers = false
 
 local Config = {
-    NPC_MODEL = "cs_omega", -- NPC model (https://docs.fivem.net/docs/game-references/ped-models/)
-    NPC_COORDS = vector3(1465.26, 6557.28, 12.93), -- NPC spawn location
-    NPC_HEADING = 90.0, -- Rotation
-    BLIP_NAME = "blip-manager", -- Blip name displayed on the map
-    BLIP_ID = 280, -- Blip sprite ID (https://docs.fivem.net/docs/game-references/blips/)
-    BLIP_ENABLED = true, -- Toggle for NPC blip visibility
-    BLIP_COLOR = 3, -- Blip color (https://docs.fivem.net/docs/game-references/blips/#blip-colors)
-    BLIP_SIZE = 1.0, -- Blip scale/size (default is 1.0)
-    POLYZONE_RADIUS = 2.0, -- Interaction radius
+    BLIP_ID = 280,
+    BLIP_COLOR = 3,
+    BLIP_SIZE = 1.0,
+    BLIP_NAME = "blip-manager",
     PREDEFINED_BLIPS = {
-        -- Example Locations
         {coords = vector3(1559.15, 6651.86, 1.61), name = "Point A", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(1795.24, 6583.31, 53.48), name = "Point B", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(2157.97, 6371.01, 184.29), name = "Point C", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(2751.84, 6543.07, 0.72), name = "Point D", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(2828.03, 5979.24, 347.15), name = "Point E", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(2909.53, 5474.84, 184.65), name = "Point F", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3444.38, 5175.65, 3.76), name = "Point G", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3612.79, 5024.97, 10.35), name = "Point H", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3197.62, 4602.26, 174.79), name = "Point I", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3937.93, 4387.37, 15.49), name = "Point J", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3287.04, 3140.41, 252.53), name = "Point K", blipId = 353, blipColor = 3, blipSize = 0.8},
-        {coords = vector3(3464.03, 2592.33, 18.34), name = "Point L", blipId = 353, blipColor = 3, blipSize = 0.8}
+        {coords = vector3(1795.24, 6583.31, 53.48), name = "Point B", blipId = 353, blipColor = 3, blipSize = 0.8}
+        -- Add more predefined blips as needed...
     }
 }
 
-local markersActive = false
-local markers = {}
-local isTogglingMarkers = false -- Guard variable to prevent re-entry
-
--- Function to load a model into memory
-function loadModel(model)
-    if not IsModelInCdimage(model) or not IsModelValid(model) then
-        return false
-    end
-
-    RequestModel(model)
-    while not HasModelLoaded(model) do
-        Wait(500)
-    end
-
-    return true
-end
-
--- Function to spawn the NPC
-function spawnNPC()
-    if not loadModel(Config.NPC_MODEL) then return nil end
-
-    local npc = CreatePed(4, Config.NPC_MODEL, Config.NPC_COORDS.x, Config.NPC_COORDS.y, Config.NPC_COORDS.z, Config.NPC_HEADING, true, true)
-    SetEntityAsMissionEntity(npc, true, true)
-    SetPedCanRagdoll(npc, false)
-    FreezeEntityPosition(npc, true)
-
-    -- Create a blip for the NPC if enabled
-    if Config.BLIP_ENABLED then
-        local blip = AddBlipForEntity(npc)
-        SetBlipSprite(blip, Config.BLIP_ID)
-        SetBlipColour(blip, Config.BLIP_COLOR)
-        SetBlipScale(blip, Config.BLIP_SIZE)
-        BeginTextCommandSetBlipName("STRING")
-        AddTextComponentString(Config.BLIP_NAME)
-        EndTextCommandSetBlipName(blip)
-    end
-
-    return npc
-end
-
--- Function to toggle map markers
-function toggleMarkers()
-    if isTogglingMarkers then
-        return
-    end
-
-    isTogglingMarkers = true -- Prevent re-entry
+-- Toggle predefined markers
+local function toggleMarkers()
+    if isTogglingMarkers then return end
+    isTogglingMarkers = true
 
     if markersActive then
         -- Deactivate markers
-        for _, marker in ipairs(markers) do
-            RemoveBlip(marker)
-        end
+        for _, marker in ipairs(markers) do RemoveBlip(marker) end
         markers = {}
     else
         -- Activate markers
         for _, blipData in ipairs(Config.PREDEFINED_BLIPS) do
             local blip = AddBlipForCoord(blipData.coords.x, blipData.coords.y, blipData.coords.z)
-            SetBlipSprite(blip, blipData.blipId or 1)
-            SetBlipColour(blip, blipData.blipColor or 1)
-            SetBlipScale(blip, blipData.blipSize or 1.0)
+            SetBlipSprite(blip, blipData.blipId)
+            SetBlipColour(blip, blipData.blipColor)
+            SetBlipScale(blip, blipData.blipSize)
             BeginTextCommandSetBlipName("STRING")
             AddTextComponentString(blipData.name)
             EndTextCommandSetBlipName(blip)
@@ -97,17 +40,17 @@ function toggleMarkers()
         end
     end
 
-    markersActive = not markersActive -- Toggle state
-    isTogglingMarkers = false -- Allow re-entry
+    markersActive = not markersActive
+    isTogglingMarkers = false
 end
 
--- Function to set up interaction with the NPC
-function setupInteraction(npc)
+-- Set up interaction with the NPC
+local function setupInteraction(npc)
     exports.ox_target:addEntity(NetworkGetNetworkIdFromEntity(npc), {
         {
-            name = 'toggle_map_markers', -- Do not change
-            label = 'Toggle Blips', -- Target text
-            icon = 'fa-map-marker-alt', -- Target icon
+            name = "toggle_map_markers",
+            label = "Toggle Blips",
+            icon = "fa-map-marker-alt",
             onSelect = function()
                 toggleMarkers()
             end
@@ -115,20 +58,56 @@ function setupInteraction(npc)
     })
 end
 
--- Main script logic
-Citizen.CreateThread(function()
-    -- Spawn the NPC
-    local npc = spawnNPC()
-    if npc then
-        setupInteraction(npc)
-    else
-        return
+-- Load a model into memory
+local function loadModel(model)
+    if not IsModelInCdimage(model) or not IsModelValid(model) then return false end
+    RequestModel(model)
+    while not HasModelLoaded(model) do Wait(500) end
+    return true
+end
+
+-- Spawn the NPC
+local function spawnNPC(data)
+    if not data or not loadModel(data.model) then return end
+
+    -- Spawn the NPC as a networked entity
+    npcEntity = CreatePed(4, data.model, data.coords.x, data.coords.y, data.coords.z, data.heading, true, true)
+    SetEntityAsMissionEntity(npcEntity, true, true)
+    SetPedCanRagdoll(npcEntity, false)
+    FreezeEntityPosition(npcEntity, true)
+
+    -- Make the NPC invincible
+    SetEntityInvincible(npcEntity, true) -- Prevent all damage
+    SetBlockingOfNonTemporaryEvents(npcEntity, true) -- Prevent reactions to player actions
+    SetPedCanBeTargetted(npcEntity, false) -- Prevent targeting by players
+
+    -- Ensure the NPC is networked
+    if not NetworkGetNetworkIdFromEntity(npcEntity) then
+        NetworkRegisterEntityAsNetworked(npcEntity)
+        while not NetworkGetNetworkIdFromEntity(npcEntity) do Wait(100) end
     end
 
-    while true do
-        Wait(500) -- Reduce loop frequency to prevent performance issues
-    end
+    -- Create a blip for the NPC (if needed)
+    local blip = AddBlipForEntity(npcEntity)
+    SetBlipSprite(blip, Config.BLIP_ID)
+    SetBlipColour(blip, Config.BLIP_COLOR)
+    SetBlipScale(blip, Config.BLIP_SIZE)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString(Config.BLIP_NAME)
+    EndTextCommandSetBlipName(blip)
+
+    setupInteraction(npcEntity) -- Set up interaction with the NPC
+end
+
+-- Listen for NPC spawn event from the server
+RegisterNetEvent("blipToggler:spawnNPC")
+AddEventHandler("blipToggler:spawnNPC", function(data)
+    if npcEntity then DeleteEntity(npcEntity) end -- Prevent multiple NPCs
+    spawnNPC(data)
 end)
 
+-- Request NPC data when the client joins
+Citizen.CreateThread(function()
+    TriggerServerEvent("blipToggler:requestNPC")
+end)
 -- 𝕭𝖑𝖆𝖈𝖐 𝕾𝖍𝖆𝖉𝖊𝖘
-
