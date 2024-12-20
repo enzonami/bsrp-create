@@ -1,27 +1,18 @@
-local NPCData = nil -- Store NPC data centrally
+local NPCData = {
+    model = "cs_omega",
+    coords = vector3(1465.26, 6557.28, 12.93),
+    heading = 90.0
+}
 
--- Spawn the NPC when the resource starts
-AddEventHandler("onResourceStart", function(resourceName)
-    if GetCurrentResourceName() == resourceName then
-        spawnGlobalNPC()
-    end
-end)
-
--- Handle NPC spawn broadcasting
+-- Send NPC data to a player when they join
 RegisterServerEvent("blipToggler:requestNPC")
 AddEventHandler("blipToggler:requestNPC", function()
-    local src = source
-    if NPCData then
-        TriggerClientEvent("blipToggler:spawnNPC", src, NPCData) -- Send NPC data to the client
-    end
+    TriggerClientEvent("blipToggler:spawnNPC", source, NPCData)
 end)
 
--- Function to define and broadcast NPC details
-function spawnGlobalNPC()
-    NPCData = {
-        model = "cs_omega",
-        coords = vector3(1465.26, 6557.28, 12.93),
-        heading = 90.0
-    }
-    TriggerClientEvent("blipToggler:spawnNPC", -1, NPCData) -- Broadcast to all players
-end
+-- Broadcast NPC data to all players on resource start
+AddEventHandler("onResourceStart", function(resourceName)
+    if GetCurrentResourceName() == resourceName then
+        TriggerClientEvent("blipToggler:spawnNPC", -1, NPCData)
+    end
+end)
